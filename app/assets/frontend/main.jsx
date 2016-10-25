@@ -8,10 +8,19 @@ class Main extends React.Component {
   }
 
   addTweet(tweetToAdd) {
-    let newTweetsList = this.state.tweetsList;
-    newTweetsList.unshift({ id: Date.now(), name: 'Guest', body: tweetToAdd });
+    $.post("/tweets", {body: tweetToAdd})
+    .success( savedTweet => {
+        let newTweetsList = this.state.tweetsList;
+        newTweetsList.unshift(savedTweet);
+        this.setState({ tweetsList: newTweetsList });
+    })
+    .error(error => console.log(error));
+  }
 
-    this.setState({ tweetsList: newTweetsList });
+  componentDidMount() {
+    $.ajax("/tweets")
+    .success(data => this.setState({ tweetsList: data }))
+    .error(error => console.log(error))
   }
 
   render() {
