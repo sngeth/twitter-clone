@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default class TweetsList extends React.Component {
   render() {
     return (
