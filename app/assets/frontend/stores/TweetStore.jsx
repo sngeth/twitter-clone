@@ -12,7 +12,6 @@ class TweetEventEmitter extends EventEmitter {
       tweet.formattedDate = moment(tweet.created_at).fromNow();
       return tweet;
     });
-
   }
 
   emitChange() {
@@ -37,6 +36,9 @@ AppDispatcher.register(action => {
       _tweets = action.rawTweets;
       TweetStore.emitChange();
       break;
+    case ActionTypes.RECEIVED_ONE_TWEET:
+      _tweets.unshift(action.rawTweet);
+      TweetStore.emitChange();
     default:
       // no op
   }
