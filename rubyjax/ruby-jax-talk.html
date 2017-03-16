@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Title</title>
+    <title>React + Rails</title>
     <meta charset="utf-8">
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanne+Kaffeesatz);
@@ -29,6 +29,16 @@
 
       1. Why use React?
 
+      2. How do I React in Rails?
+
+      3. React Components
+
+      4. More Interesting Examples
+
+      5. Ok I got rid of my jQuery spaghetti, now what?
+
+      5. Follow up
+
       ---
 
       # Why use React?
@@ -44,6 +54,47 @@
       # I don't have an ambitious app..but I do have
 
       .center[![image](./jquery-style-vs-react-style.png)]
+
+      ---
+
+      # How do I React in Rails?
+
+      Do it by hand if you're sadistic:
+      - Webpack. The goal is to generate a "bundle" that Rail's application.js uses or in your layouts directly
+
+      Basic use cases where you want some JSX components asset compiled and sprinkled in:
+      - gem 'react-rails'
+      - global name space pollution
+
+      Drink the JavaScript kool-aid that's already pre mixed:
+      - gem 'react_on_rails'
+      - JavaScript stays a 1st class citizen vs Gemified JS/Removes Globals on window
+      - Hot reloading
+      - Any other tools in the Node ecosystem
+
+      ---
+
+      .center[![image](./ilovecomponents.jpg)]
+
+      But you're mixing HTML with JS, violation SoC
+
+      ```js
+      export default class Tweet extends React.Component {
+        render() {
+          return (
+            <li className="collection-item avatar">
+              <img src={this.props.gravatar} className="circle" />
+              <span className="title">{this.props.name}</span>
+              <time>{this.props.formattedDate}</time>
+              <p>{this.props.body}</p>
+            </li>
+          )
+        }
+      }
+      ```
+      <blockquote>
+        "UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup? That's not separation of concerns. That's just indirection."
+      </blockquote>
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
