@@ -31,11 +31,9 @@
 
       2. How do I React in Rails?
 
-      3. React Components
+      3. React 10,000 ft view
 
-      4. More Interesting Examples
-
-      5. Ok I got rid of my jQuery spaghetti, now what?
+      4. Flux
 
       5. Follow up
 
@@ -76,7 +74,7 @@
 
       .center[![image](./ilovecomponents.jpg)]
 
-      But you're mixing HTML with JS, violation SoC
+      Do you really love components or are you just saying that? Looks like you're mixing HTML with JS, violating Separation of Concerns
 
       ```js
       export default class Tweet extends React.Component {
@@ -92,9 +90,101 @@
         }
       }
       ```
-      <blockquote>
-        "UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup? That's not separation of concerns. That's just indirection."
-      </blockquote>
+      <h5>"UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup? 
+        That's not separation of concerns. That's just indirection." --redditor </h5>
+
+      ---
+
+      # "Mutate" the Immutable State
+      - Ok so you just gave me weird JS looking thing with HTML that takes in some data. How do I do something dynamic?
+
+      ```jsx
+      class Main extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = { tweetsList: [] };
+        }
+
+        addTweet(tweetToAdd) {
+          // grab the current tweet list state
+          let newTweetsList = this.state.tweetsList;
+          // modify a copy of it
+          newTweetsList.unshift({ id: Date.now(), name: 'Guest', body: tweetToAdd });
+          //let React merge the new state and cause a re-render
+          this.setState({ tweetsList: newTweetsList });
+        }
+
+        render() {
+          return (
+          <div className="container">
+            //Note: We're passing an event handler to the TweetBox
+            <TweetBox sendTweet={this.addTweet.bind(this)}/>
+            <TweetsList tweets={this.state.tweetsList}/>
+          </div>
+          );
+        }
+      }
+      ```
+
+      ---
+
+      ```js
+      class TweetBox extends React.Component {
+        handleNewTweet(event) {
+          event.preventDefault()
+          // Recall that the Main component passed an event handler called sendTweet
+          // We call that event handler with the tweet's text value
+          // when the form triggers this component's local function
+          this.props.sendTweet(this.refs.tweetTextArea.value);
+          this.refs.tweetTextArea.value = '';
+        }
+
+        render() {
+          return (
+          <div className="row">
+            // Trigger local function that calls the Main component's
+            // event handler for adding a tweet
+      *     <form onSubmit={this.handleNewTweet.bind(this)}>
+              <div className="input-field">
+                <label>What's happening?</label>
+                <textarea ref="tweetTextArea" className="materialize-textarea" />
+                  <button type="submit" className="btn right">Tweet</button>
+              </div>
+            </form>
+          </div>
+          );
+        }
+      }
+      ```
+
+      ---
+
+      # <strike>jQuery spaghetti</strike> What now?
+      Let's fetch real data from our Rails backend because Rails isn't dead.
+
+      ```js
+      class Main extends React.Component {
+        // constructor omitted
+
+        addTweet(tweetToAdd) {
+          $.post("/tweets", {body: tweetToAdd})
+          .success( savedTweet => {
+            let newTweetsList = this.state.tweetsList;
+            newTweetsList.unshift(savedTweet);
+            this.setState({ tweetsList: newTweetsList });
+            })
+          .error(error => console.log(error));
+        }
+
+        componentDidMount() {
+          $.ajax("/tweets")
+          .success(data => this.setState({ tweetsList: data }))
+          .error(error => console.log(error))
+        }
+
+        //render omitted
+      }
+      ```
 
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
