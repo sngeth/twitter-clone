@@ -35,7 +35,7 @@
 
       4. Flux
 
-      5. Follow up
+      5. Demo
 
       ---
 
@@ -96,7 +96,7 @@
       ---
 
       # "Mutate" the Immutable State
-      - Ok so you just gave me weird JS looking thing with HTML that takes in some data. How do I do something dynamic?
+      Ok so you just gave me weird JS looking thing with HTML that takes in some data. How do I do something dynamic?
 
       ```jsx
       class Main extends React.Component {
@@ -144,7 +144,7 @@
           <div className="row">
             // Trigger local function that calls the Main component's
             // event handler for adding a tweet
-      *     <form onSubmit={this.handleNewTweet.bind(this)}>
+            <form onSubmit={this.handleNewTweet.bind(this)}>
               <div className="input-field">
                 <label>What's happening?</label>
                 <textarea ref="tweetTextArea" className="materialize-textarea" />
@@ -186,6 +186,276 @@
       }
       ```
 
+      ---
+      #Preventing React Spaghetti
+      Ok so our main component is cutting into multiple concerns. What can we do?
+
+      Let's just slap some MVC on it, duh!
+
+      .center[![image](./flux-react-mvc.png)]
+
+      ---
+
+      # Flux
+      - Application architecture for building user interfaces
+
+      .center[![image](./flux-flow.png)]
+
+      ---
+
+      # Flux example
+      View will still typically trigger actions, but can just get called by themselves (e.g. initial data fetching)
+
+      ```js
+      //Old Code
+      export default class TweetBox extends React.Component {
+        handleNewTweet(event) {
+          event.preventDefault()
+          // Recall that sendTweet was a event handler from the main component
+          // that calls setState to re-render the UI
+          this.props.sendTweet(this.refs.tweetTextArea.value);
+          this.refs.tweetTextArea.value = '';
+        }
+
+        //render omitted
+
+      }
+      ```
+      ```js
+      //New Code
+      export default class TweetBox extends React.Component {
+        handleNewTweet(event) {
+          event.preventDefault()
+          //Instead let's call a new module that handles TweetActions
+          TweetActions.sendTweet(this.refs.tweetTextArea.value);
+          this.refs.tweetTextArea.value = '';
+        }
+
+        //render omitted
+      }
+      ```
+      ---
+
+      ```js
+      //This is TweetActions.jsx
+      import API from "../API"
+
+      export default {
+        getAllTweets() {
+          API.getAllTweets();
+        },
+        sendTweet(body) {
+          API.createTweet(body);
+        }
+      }
+      ```
+
+      ```js
+      //This is API.jsx
+      import ServerActions from "./actions/ServerActions"
+
+      export default {
+        getAllTweets() {
+          $.get("/tweets")
+          .success(rawTweets => ServerActions.receivedTweets(rawTweets))
+          .error(error => console.log(error))
+        },
+        createTweet(body) {
+          $.post("/tweets", { body })
+          .success(rawTweet => ServerActions.receivedOneTweet(rawTweet))
+          .error(error => console.log(error));
+        }
+      }
+      ```
+
+      ---
+
+      # So our Tweet Action Triggered a Server Action...
+      I'm sick of actions let's actually dispatch it and make it do something
+
+      ```js
+      import AppDispatcher from "../dispatcher"
+      import ActionTypes from "../constants"
+
+      export default {
+        receivedTweets(rawTweets) {
+          AppDispatcher.dispatch({
+            actionType: ActionTypes.RECEIVED_TWEETS,
+            rawTweets
+          });
+        },
+
+        receivedOneTweet(rawTweet) {
+          AppDispatcher.dispatch({
+            actionType: ActionTypes.RECEIVED_ONE_TWEET,
+            rawTweet
+          });
+        }
+      }
+      ```
+
+      ---
+      # Stores
+      It's holding our tweets state
+      ```js
+      import AppDispatcher from "../dispatcher";
+      import ActionTypes from "../constants";
+      import { EventEmitter } from "events";
+
+      let _tweets = [];
+      const CHANGE_EVENT = "CHANGE";
+
+      class TweetEventEmitter extends EventEmitter {
+        getAll() {
+          return  _tweets.map(tweet => {
+            tweet.formattedDate = moment(tweet.created_at).fromNow();
+            return tweet;
+          });
+        }
+
+        emitChange() {
+          this.emit(CHANGE_EVENT);
+        }
+
+        //Views listen for events emitted by stores
+        //Lets store know that a view is listening to change events
+        addChangeListener(callback) {
+          this.on(CHANGE_EVENT, callback);
+        }
+      }
+      ```
+
+      ---
+
+      # Stores register actions it's interested in
+
+      Once our store receives an action from the dispatcher we omit a change which the views can listen for
+      if they are added a change listener
+      ```js
+      let TweetStore = new TweetEventEmitter();
+
+      AppDispatcher.register(action => {
+        switch(action.actionType) {
+          case ActionTypes.RECEIVED_TWEETS:
+            _tweets = action.rawTweets;
+            TweetStore.emitChange();
+
+          case ActionTypes.RECEIVED_ONE_TWEET:
+            _tweets.unshift(action.rawTweet);
+            TweetStore.emitChange();
+
+          break;
+            default:
+            // no op
+          }
+      })
+
+      export default TweetStore;
+      ```
+
+      ---
+
+      # Controller-Views
+
+      ```js
+      //Index.jsx
+      TweetActions.getAllTweets();
+
+      let getAppState = () => {
+        return { tweetsList: TweetStore.getAll() };
+      }
+
+      export default class Index extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = getAppState();
+          this._onChange = this._onChange.bind(this);
+        }
+
+        componentDidMount() {
+          TweetStore.addChangeListener(this._onChange)
+        }
+
+        componentWillUnMount() {
+          TweetStore.removeChangeListener(this._onChange)
+        }
+
+        _onChange() {
+          this.setState(getAppState());
+        }
+      }
+      ```
+
+      ---
+
+      # Our component in it's final form
+      ```js
+      export default class Index extends React.Component {
+
+        //... code from previous slide
+
+        render() {
+          return (
+            <div className="container">
+              <TweetBox/>
+              <TweetsList tweets={this.state.tweetsList}/>
+            </div>
+          );
+        }
+      }
+      ```
+
+      ---
+
+      # Let's just get ambitious
+
+      ```js
+      import { Router, Route, Link, hashHistory } from 'react-router';
+
+      class App extends React.Component {
+        render() {
+          return (
+            <div>
+              {this.props.children}
+            </div>
+          )
+        }
+      }
+
+      let documentReady = () => {
+        let reactNode = document.getElementById('react');
+
+        if(reactNode) {
+          ReactDOM.render(
+            <Router history={hashHistory}>
+              <Route component={App}>
+                <Route path="/" component={Index}/>
+                <Route path="/follow" component={Follow}/>
+              </Route>
+            </Router>
+            , reactNode);
+        }
+      };
+
+      $(documentReady);
+      ```
+
+      ---
+
+      # Beyond Flux if you even needed it...
+
+      - Does implementing this pattern make you want to vomit?
+
+      - Redux is pretty popular library that implements the Flux pattern with certain constraints
+
+      - I stopped my JS endeavours here currently and moved onto Elm :-)
+
+      From Redux's Github "Thanks The Elm Architecture for a great intro to modeling state updates with reducers"
+
+      - Congrats, you're now equipped to be a native mobile developer
+
+
+
     </textarea>
     <script src="https://remarkjs.com/downloads/remark-latest.min.js">
     </script>
@@ -194,4 +464,3 @@
     </script>
   </body>
 </html>
-
