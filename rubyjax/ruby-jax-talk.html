@@ -56,19 +56,17 @@
       ---
 
       # How do I React in Rails?
+      - webpacker gem is now the canonical solution. Included in 5.1+ as a default
 
-      Do it by hand if you're sadistic:
-      - Webpack. The goal is to generate a "bundle" that Rail's application.js uses or in your layouts directly
+      - 4.2+ add to your gemfile: gem 'webpacker', github: 'rails/webpacker'
 
-      Basic use cases where you want some JSX components asset compiled and sprinkled in:
-      - gem 'react-rails'
-      - global name space pollution
+      - Call it on a new project: rails new with --webpack
 
-      Drink the JavaScript kool-aid that's already pre mixed:
-      - gem 'react_on_rails'
-      - JavaScript stays a 1st class citizen vs Gemified JS/Removes Globals on window
-      - Hot reloading
-      - Any other tools in the Node ecosystem
+      - Call it on an existing project ./bin/rails webpacker:install
+
+      - Bootstrap React configuration: ./bin/rails webpacker:install:react
+
+      - Bonus support for Angular 2, Vue, and Elm
 
       ---
 
