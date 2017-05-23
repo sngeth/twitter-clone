@@ -74,6 +74,13 @@
 
       Do you really love components or are you just saying that? Looks like you're mixing HTML with JS, violating Separation of Concerns
 
+      <h5>"UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup?
+        That's not separation of concerns. That's just indirection." --redditor </h5>
+
+      ---
+
+      # A basic component
+
       ```js
       export default class Tweet extends React.Component {
         render() {
@@ -88,9 +95,24 @@
         }
       }
       ```
-      <h5>"UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup? 
-        That's not separation of concerns. That's just indirection." --redditor </h5>
 
+      ```js
+      const Tweet = (props) => {
+      const findSimilar = (event) => { //call service to fetch and load similiar tweets }
+
+        return (
+          <li className="collection-item avatar">
+            <img src={props.gravatar} className="circle" />
+            <span className="title">{props.name}</span>
+            <time>{props.formattedDate}</time>
+            <p>{props.body}</p>
+          </li>
+          <a href ="#" onClick={findSimilar}> Find similar hashtags</a>
+          //in a traditional class this would be onClick={this.findSimilar.bind(this)}
+        )
+      }
+
+      ```
       ---
 
       # "Mutate" the Immutable State
