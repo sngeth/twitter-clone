@@ -55,6 +55,15 @@
 
       ---
 
+      .center[![image](./jquery-style-3.png)]
+
+      ---
+
+      .center[![image](./react-style-4.png)]
+
+      ---
+
+
       # How do I React in Rails?
       - webpacker gem is now the canonical solution. Included in 5.1+ as a default
 
@@ -70,12 +79,14 @@
 
       ---
 
-      .center[![image](./ilovecomponents.jpg)]
+      # Preface: Seperation of Concern "violations"
 
       Do you really love components or are you just saying that? Looks like you're mixing HTML with JS, violating Separation of Concerns
 
-      <h5>"UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup?
-        That's not separation of concerns. That's just indirection." --redditor </h5>
+      .center[![image](./ilovecomponents.jpg)]
+
+      > > "UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup?
+        That's not separation of concerns. That's just indirection." --redditor
 
       ---
 
@@ -83,7 +94,18 @@
 
       ```js
       export default class Tweet extends React.Component {
+        constructor(props) {
+          super(props);
+
+          this.state = {
+            //initialize state objects here
+          }
+        }
+
         render() {
+          // lifecycle methods typically here
+          // e.g. componentDidMount, componentWillUnmount
+
           return (
             <li className="collection-item avatar">
               <img src={this.props.gravatar} className="circle" />
@@ -96,9 +118,15 @@
       }
       ```
 
+      ---
+
+      # Stateless form
+
       ```js
       const Tweet = (props) => {
-      const findSimilar = (event) => { //call service to fetch and load similiar tweets }
+        const findSimilar = (event) => {
+          //call service to fetch and load similiar tweets
+        }
 
         return (
           <li className="collection-item avatar">
@@ -108,9 +136,11 @@
             <p>{props.body}</p>
           </li>
           <a href ="#" onClick={findSimilar}> Find similar hashtags</a>
-          //in a traditional class this would be onClick={this.findSimilar.bind(this)}
+          //React class this would be onClick={this.findSimilar.bind(this)}
         )
       }
+
+      export default Tweet
 
       ```
       ---
@@ -130,17 +160,17 @@
           let newTweetsList = this.state.tweetsList;
           // modify a copy of it
           newTweetsList.unshift({ id: Date.now(), name: 'Guest', body: tweetToAdd });
-          //let React merge the new state and cause a re-render
+          //let React know the virtual DOM changed and cause a re-render
           this.setState({ tweetsList: newTweetsList });
         }
 
         render() {
           return (
-          <div className="container">
-            //Note: We're passing an event handler to the TweetBox
-            <TweetBox sendTweet={this.addTweet.bind(this)}/>
-            <TweetsList tweets={this.state.tweetsList}/>
-          </div>
+            <div className="container">
+              //Note: We're passing an event handler to the TweetBox
+              <TweetBox sendTweet={this.addTweet.bind(this)}/>
+              <TweetsList tweets={this.state.tweetsList}/>
+            </div>
           );
         }
       }
@@ -150,6 +180,9 @@
 
       ```js
       class TweetBox extends React.Component {
+        // Note i'm not explicity creating a constructor method
+        // this.props will still be injected by React for you automatically
+
         handleNewTweet(event) {
           event.preventDefault()
           // Recall that the Main component passed an event handler called sendTweet
@@ -294,6 +327,8 @@
       I'm sick of actions let's actually dispatch it and make it do something
 
       ```js
+      // This is ServerActions.jsx - contains our "Action Creators"
+
       import AppDispatcher from "../dispatcher"
       import ActionTypes from "../constants"
 
@@ -316,10 +351,10 @@
 
       ---
       # Stores
-      It's holding our tweets state
+      It's holding our tweets state, can kind of think of it as our "model"
       ```js
+      // TweetStore.jsx
       import AppDispatcher from "../dispatcher";
-      import ActionTypes from "../constants";
       import { EventEmitter } from "events";
 
       let _tweets = [];
@@ -337,8 +372,7 @@
           this.emit(CHANGE_EVENT);
         }
 
-        //Views listen for events emitted by stores
-        //Lets store know that a view is listening to change events
+        // Allows store know that a view is listening to change events
         addChangeListener(callback) {
           this.on(CHANGE_EVENT, callback);
         }
@@ -347,11 +381,13 @@
 
       ---
 
-      # Stores register actions it's interested in
+      # Stores register with actions
 
       Once our store receives an action from the dispatcher we omit a change which the views can listen for
-      if they are added a change listener
+      if they are add a change listener
       ```js
+      // This is TweetStore.jsx
+      let _tweets = [];
       let TweetStore = new TweetEventEmitter();
 
       AppDispatcher.register(action => {
@@ -376,9 +412,10 @@
       ---
 
       # Controller-Views
+      Component that holds all state and passes it to children as props
 
       ```js
-      //Index.jsx
+      // Index.jsx
       TweetActions.getAllTweets();
 
       let getAppState = () => {
@@ -470,9 +507,9 @@
 
       - I stopped my JS endeavours here currently and moved onto Elm :-)
 
-      From Redux's Github "Thanks The Elm Architecture for a great intro to modeling state updates with reducers"
+      > > From Redux's Github "Thanks The Elm Architecture for a great intro to modeling state updates with reducers"
 
-      - Congrats, you're now equipped to be a native mobile developer
+      - Congrats, you're now equipped to be a native mobile developer. Look into React Native
 
 
 
