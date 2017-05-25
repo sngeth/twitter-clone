@@ -3,6 +3,7 @@
   <head>
     <title>React + Rails</title>
     <meta charset="utf-8">
+
     <style>
       @import url(https://fonts.googleapis.com/css?family=Yanne+Kaffeesatz);
       @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
@@ -79,7 +80,7 @@
 
       ---
 
-      # Preface: Seperation of Concern "violations"
+      # Seperation of <strike>Concern</strike> Behaviors
 
       Do you really love components or are you just saying that? Looks like you're mixing HTML with JS, violating Separation of Concerns
 
@@ -87,6 +88,10 @@
 
       > > "UI presentation and UI interaction are closely intertwined. Ever work on a project with index.html and then one big app.js of jQuery select/trigger soup?
         That's not separation of concerns. That's just indirection." --redditor
+
+      ---
+
+      .center[![image](./props_state.jpg)]
 
       ---
 
@@ -257,8 +262,6 @@
       ---
 
       # Flux example
-      View will still typically trigger actions, but can just get called by themselves (e.g. initial data fetching)
-
       ```js
       //Old Code
       export default class TweetBox extends React.Component {
@@ -372,7 +375,8 @@
           this.emit(CHANGE_EVENT);
         }
 
-        // Allows store know that a view is listening to change events
+        // Callback for view to attach to so it can listen to change events
+        // and respond every time a store updates
         addChangeListener(callback) {
           this.on(CHANGE_EVENT, callback);
         }
@@ -383,8 +387,7 @@
 
       # Stores register with actions
 
-      Once our store receives an action from the dispatcher we omit a change which the views can listen for
-      if they are add a change listener
+      Once our store receives an action from the dispatcher we omit a change. Stores will notify any views interested
       ```js
       // This is TweetStore.jsx
       let _tweets = [];
@@ -395,13 +398,14 @@
           case ActionTypes.RECEIVED_TWEETS:
             _tweets = action.rawTweets;
             TweetStore.emitChange();
+            break;
 
           case ActionTypes.RECEIVED_ONE_TWEET:
             _tweets.unshift(action.rawTweet);
             TweetStore.emitChange();
+            break;
 
-          break;
-            default:
+          default:
             // no op
           }
       })
